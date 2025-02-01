@@ -57,7 +57,7 @@ def batch_process_pdfs(input_dir, output_dir):
     print(f"Text files saved to: {output_path}")
 
 if __name__ == "__main__":
-    input_directory = "female-nominees"
-    output_directory = "female-nominees-processed"
+    input_directory = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/male-nominees"
+    output_directory = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/male-nominees-processed"
     
     batch_process_pdfs(input_directory, output_directory)
