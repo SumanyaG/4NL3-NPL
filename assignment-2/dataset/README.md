@@ -6,6 +6,7 @@ For each nomination hearing, the following files have been included as individua
 - Statements of Committee Members (including Prepared Statements)
 - Statements and/or Testimony by the Nominee
 - Questions and Answers
+
 All of the aforementioned files can be found at https://www.govinfo.gov/collection/supreme-court-nomination-hearings.
 
 This folder contains the following files and subfolders:
