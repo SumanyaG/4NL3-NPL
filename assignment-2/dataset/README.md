@@ -10,7 +10,6 @@ For each nomination hearing, the following files have been included as individua
 All of the aforementioned files can be found at https://www.govinfo.gov/collection/supreme-court-nomination-hearings.
 
 This folder contains the following files and subfolders:
-- **text_extract.py**: Python script to extract data from the PDF files and store them as TXT files
 - **female-nominees**: folder containing 136 PDFs related to the nomination hearings of the three women justices
 - **female-nominees-processed**: folder containing 136 TXT files each of which corresponds to an individual document
 - **male-nominees**: folder containing 147 PDFs related to the nomination hearings of the four men justices
