@@ -93,7 +93,7 @@ def preprocess_text_for_lda(texts):
                 len(token) > 2 and    
                 not any(char.isdigit() for char in token) and  
                 token not in stop_words and
-                not token.startswith('sgpo')) 
+                not token.startswith('sgpo'))  
         ]
         
         if tokens: 
@@ -223,29 +223,23 @@ def main():
     female_dir = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/female-nominees-processed"
     male_dir = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/male-nominees-processed"
     
-    print("Loading data...")
     female_texts = load_texts_from_directory(female_dir)
     male_texts = load_texts_from_directory(male_dir)
     
     all_texts = female_texts + male_texts
     labels = np.array([0]*len(female_texts) + [1]*len(male_texts))
     
-    print("Preprocessing texts for Naive Bayes...")
     nb_texts = preprocess_text_for_naive_bayes(all_texts)
     
-    print("Creating BOW matrix...")
     bow_matrix, vectorizer = create_bow_matrix(nb_texts)
     feature_names = np.array(vectorizer.get_feature_names_out())
     
-    print("Calculating Naive Bayes probabilities...")
     p_w_female, p_w_male = calculate_word_probabilities(
         bow_matrix, labels, len(feature_names)
     )
     
-    print("Calculating log likelihood ratios...")
     llr_scores = calculate_log_likelihood_ratio(p_w_female, p_w_male)
     
-    print("Analyzing word categories...")
     categorized_results = categorize_words(llr_scores, feature_names)
     
     results_list = []
@@ -262,10 +256,8 @@ def main():
     pd.DataFrame(results_list).to_csv('naive_bayes_results.csv', index=False)
     print("\nNaive Bayes results saved to 'naive_bayes_results.csv'")
     
-    print("\nPreprocessing texts for LDA...")
     processed_texts = preprocess_text_for_lda(all_texts)
     
-    print("Training LDA model...")
     lda_model, corpus, dictionary = create_lda_model(processed_texts, num_topics=10)
     
     topics = get_topic_words(lda_model)
@@ -278,7 +270,6 @@ def main():
     topic_df.to_csv('topic_words.csv', index=False)
     print("\nTop words for each topic saved to 'topic_words.csv'")
     
-    print("\nCalculating category-topic distributions...")
     female_avg, male_avg = get_document_topics(lda_model, corpus, labels)
     
     category_topics = pd.DataFrame({
@@ -299,7 +290,6 @@ def main():
         print(f"Topic {idx} ({male_avg[idx]:.3f})")
         print("Top words:", ", ".join([f"{w}({p:.3f})" for w, p in topics[idx][:5]]))
     
-    print("\nGenerating visualization...")
     vis = pyLDAvis.gensim_models.prepare(lda_model, corpus, dictionary)
     pyLDAvis.save_html(vis, 'lda_visualization.html')
     print("Interactive visualization saved to 'lda_visualization.html'")

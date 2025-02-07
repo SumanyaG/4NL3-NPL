@@ -1,221 +1,92 @@
-import numpy as np
-from sklearn.feature_extraction.text import CountVectorizer, TfidfVectorizer
-from nltk.stem import PorterStemmer, WordNetLemmatizer
-from nltk.corpus import stopwords
-import nltk
-import re
+import processing
+
+import pyLDAvis
 import pandas as pd
-from gensim import corpora
-import gensim
-import logging
-from scipy.sparse import save_npz, load_npz
-import math
-from collections import defaultdict
+import numpy as np
+import nltk
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import TfidfVectorizer
+from nltk.stem import PorterStemmer
 
-class TextNormalizer:
-    def __init__(self, lowercase=True, stem=False, lemmatize=False, 
-                 remove_stopwords=True, remove_numbers=True):
-        self.lowercase = lowercase
-        self.stem = stem
-        self.lemmatize = lemmatize
-        self.remove_stopwords = remove_stopwords
-        self.remove_numbers = remove_numbers
-        
-        # Initialize NLTK components
-        try:
-            nltk.data.find('tokenizers/punkt')
-            nltk.data.find('corpora/stopwords')
-            nltk.data.find('corpora/wordnet')
-        except LookupError:
-            nltk.download('punkt')
-            nltk.download('stopwords')
-            nltk.download('wordnet')
-        
-        self.stemmer = PorterStemmer() if stem else None
-        self.lemmatizer = WordNetLemmatizer() if lemmatize else None
-        self.stop_words = set(stopwords.words('english')) if remove_stopwords else set()
+def preprocess_text_with_stemming(texts):
+    try:
+        nltk.data.find('corpora/stopwords')
+    except LookupError:
+        nltk.download('stopwords')
     
-    def normalize(self, text):
-        # Lowercase
-        if self.lowercase:
-            text = text.lower()
-        
-        # Remove numbers
-        if self.remove_numbers:
-            text = re.sub(r'\d+', '', text)
-        
-        # Tokenize
-        tokens = nltk.word_tokenize(text)
-        
-        # Process tokens
-        normalized_tokens = []
-        for token in tokens:
-            # Skip stopwords
-            if self.remove_stopwords and token in self.stop_words:
-                continue
-            
-            # Apply stemming or lemmatization
-            if self.stem:
-                token = self.stemmer.stem(token)
-            elif self.lemmatize:
-                token = self.lemmatizer.lemmatize(token)
-            
-            normalized_tokens.append(token)
-        
-        return ' '.join(normalized_tokens)
+    stemmer = PorterStemmer()
+    stop_words = set(stopwords.words('english'))
+    additional_stops = {
+        'said', 'would', 'could', 'also', 'one', 'two', 'three',
+        'hearing', 'hearings', 'committee', 'senate', 'senator',
+        'court', 'supreme', 'judicial', 'judge', 'case', 'law',
+        'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec',
+        'sgpohearings', 'sgpohearingstxt', 'txt', 'sgpo'
+    }
+    stop_words.update(additional_stops)
+    
+    processed_texts = []
+    for text in texts:
+        text = processing.clean_text(text)
+        words = [stemmer.stem(word) for word in text.split() 
+                if len(word) > 2 
+                and word not in stop_words
+                and not any(char.isdigit() for char in word)
+                and not word.startswith('sgpo')]
+        processed_texts.append(' '.join(words))
+    
+    return processed_texts
 
-def create_bow_representations(texts, vectorizer_type='count'):
-    """Create different BOW representations"""
-    if vectorizer_type == 'count':
-        vectorizer = CountVectorizer(min_df=2, max_df=0.95)
-    elif vectorizer_type == 'binary':
-        vectorizer = CountVectorizer(min_df=2, max_df=0.95, binary=True)
-    else:  # tfidf
-        vectorizer = TfidfVectorizer(min_df=2, max_df=0.95)
-    
-    bow_matrix = vectorizer.fit_transform(texts)
-    return bow_matrix, vectorizer
-
-def calculate_llr(bow_matrix, labels, vectorizer):
-    """Calculate log likelihood ratios for words"""
-    female_docs = bow_matrix[labels == 0]
-    male_docs = bow_matrix[labels == 1]
-    
-    # Get word counts
-    female_word_counts = np.array(female_docs.sum(axis=0))[0]
-    male_word_counts = np.array(male_docs.sum(axis=0))[0]
-    
-    # Add smoothing
-    alpha = 1.0
-    vocab_size = len(vectorizer.vocabulary_)
-    
-    # Calculate probabilities with smoothing
-    p_w_female = (female_word_counts + alpha) / (female_word_counts.sum() + alpha * vocab_size)
-    p_w_male = (male_word_counts + alpha) / (male_word_counts.sum() + alpha * vocab_size)
-    
-    # Calculate LLR
-    llr = np.log(p_w_female) - np.log(p_w_male)
-    
-    return llr
-
-def run_lda(texts, num_topics=10):
-    """Run LDA and return coherence score"""
-    # Tokenize
-    tokenized_texts = [text.split() for text in texts]
-    
-    # Create dictionary and corpus
-    dictionary = corpora.Dictionary(tokenized_texts)
-    dictionary.filter_extremes(no_below=5, no_above=0.5)
-    corpus = [dictionary.doc2bow(text) for text in tokenized_texts]
-    
-    # Train LDA
-    lda_model = gensim.models.ldamodel.LdaModel(
-        corpus=corpus,
-        id2word=dictionary,
-        num_topics=num_topics,
-        random_state=42,
-        passes=15
+def create_tfidf_matrix(texts):
+    vectorizer = TfidfVectorizer(
+        min_df=5,
+        max_df=0.6,
+        token_pattern=r'[a-zA-Z]+(?:[-][a-zA-Z]+)*',
+        lowercase=True
     )
     
-    # Calculate coherence
-    coherence_model = gensim.models.CoherenceModel(
-        model=lda_model, 
-        texts=tokenized_texts, 
-        dictionary=dictionary, 
-        coherence='c_v'
-    )
-    
-    return coherence_model.get_coherence()
-
-def compare_configurations(female_texts, male_texts):
-    """Compare different configurations and their results"""
-    results = []
-    
-    # Define configurations to test
-    normalizer_configs = [
-        {'name': 'basic', 'lowercase': True, 'remove_stopwords': True, 'remove_numbers': True},
-        {'name': 'stem', 'lowercase': True, 'stem': True, 'remove_stopwords': True, 'remove_numbers': True},
-        {'name': 'lemmatize', 'lowercase': True, 'lemmatize': True, 'remove_stopwords': True, 'remove_numbers': True}
-    ]
-    
-    bow_types = ['count', 'binary', 'tfidf']
-    
-    for norm_config in normalizer_configs:
-        normalizer = TextNormalizer(**{k: v for k, v in norm_config.items() if k != 'name'})
-        
-        # Normalize texts
-        normalized_female = [normalizer.normalize(text) for text in female_texts]
-        normalized_male = [normalizer.normalize(text) for text in male_texts]
-        all_texts = normalized_female + normalized_male
-        labels = np.array([0]*len(normalized_female) + [1]*len(normalized_male))
-        
-        for bow_type in bow_types:
-            print(f"\nProcessing {norm_config['name']} normalization with {bow_type} representation...")
-            
-            # Create BOW representation
-            bow_matrix, vectorizer = create_bow_representations(all_texts, bow_type)
-            
-            # Calculate LLR
-            llr = calculate_llr(bow_matrix, labels, vectorizer)
-            
-            # Get top words by LLR
-            idx_to_word = {idx: word for word, idx in vectorizer.vocabulary_.items()}
-            top_female = [(idx_to_word[i], llr[i]) for i in llr.argsort()[-10:]]
-            top_male = [(idx_to_word[i], llr[i]) for i in llr.argsort()[:10]]
-            
-            # Run LDA
-            coherence = run_lda(all_texts)
-            
-            # Store results
-            results.append({
-                'normalization': norm_config['name'],
-                'bow_type': bow_type,
-                'vocab_size': len(vectorizer.vocabulary_),
-                'coherence': coherence,
-                'top_female_words': top_female,
-                'top_male_words': top_male
-            })
-    
-    return pd.DataFrame(results)
+    tfidf_matrix = vectorizer.fit_transform(texts)
+    return tfidf_matrix, vectorizer
 
 def main():
-    # Load your corpus
-    print("Loading corpus...")
-    with open('female_texts.txt', 'r', encoding='utf-8') as f:
-        female_texts = f.readlines()
-    with open('male_texts.txt', 'r', encoding='utf-8') as f:
-        male_texts = f.readlines()
+    female_dir = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/female-nominees-processed"
+    male_dir = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/male-nominees-processed"
     
-    # Run comparisons
-    results_df = compare_configurations(female_texts, male_texts)
+    female_texts = processing.load_texts_from_directory(female_dir)
+    male_texts = processing.load_texts_from_directory(male_dir)
+    all_texts = female_texts + male_texts
+    labels = np.array([0]*len(female_texts) + [1]*len(male_texts))
     
-    # Save results
-    results_df.to_csv('normalization_comparison.csv', index=False)
+    stemmed_texts = preprocess_text_with_stemming(all_texts)
     
-    # Print summary
-    print("\nSummary of results:")
-    print("\nBest configurations by coherence score:")
-    print(results_df.sort_values('coherence', ascending=False)[['normalization', 'bow_type', 'coherence']].head())
+    tfidf_matrix, vectorizer = create_tfidf_matrix(stemmed_texts)
+    feature_names = np.array(vectorizer.get_feature_names_out())
     
-    print("\nVocabulary sizes:")
-    print(results_df.groupby(['normalization', 'bow_type'])['vocab_size'].mean())
+    p_w_female, p_w_male = processing.calculate_word_probabilities(
+        tfidf_matrix, labels, len(feature_names)
+    )
     
-    # Create detailed report
-    with open('analysis_report.txt', 'w') as f:
-        f.write("Text Normalization and BOW Comparison Analysis\n")
-        f.write("===========================================\n\n")
-        
-        for _, row in results_df.iterrows():
-            f.write(f"\nConfiguration: {row['normalization']} normalization with {row['bow_type']} representation\n")
-            f.write(f"Vocabulary size: {row['vocab_size']}\n")
-            f.write(f"Topic coherence: {row['coherence']:.4f}\n")
-            f.write("\nTop female-associated words:\n")
-            for word, score in row['top_female_words']:
-                f.write(f"  {word}: {score:.4f}\n")
-            f.write("\nTop male-associated words:\n")
-            for word, score in row['top_male_words']:
-                f.write(f"  {word}: {score:.4f}\n")
-            f.write("\n" + "="*50 + "\n")
+    llr_scores = processing.calculate_log_likelihood_ratio(p_w_female, p_w_male)
+    categorized_results = processing.categorize_words(llr_scores, feature_names)
+    
+    lda_texts = [text.split() for text in stemmed_texts]
+    lda_model, corpus, dictionary = processing.create_lda_model(lda_texts, num_topics=10)
+    
+    results_list = []
+    for gender in ['female', 'male']:
+        for category, words in categorized_results[gender].items():
+            for word, score in words:
+                results_list.append({
+                    'Gender': gender,
+                    'Category': category,
+                    'Word': word,
+                    'LLR_Score': score
+                })
+    
+    pd.DataFrame(results_list).to_csv('stemmed_tfidf_results.csv', index=False)
+    
+    vis = pyLDAvis.gensim_models.prepare(lda_model, corpus, dictionary)
+    pyLDAvis.save_html(vis, 'stemmed_lda_visualization.html')
 
 if __name__ == "__main__":
     main()
