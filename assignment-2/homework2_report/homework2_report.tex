@@ -247,35 +247,56 @@ As shown in figure \ref{fig:LDA}, the intertopic distance map visualizes the rel
 a topic with the bubble's size indicating the topic's overall prevalence in the dataset. Topics 12, 8, 4, 1, 6, 9, 5, 3 and more are overlapping and 
 clustered together suggesting similarity. \\
 
-The 30 most important words are either names, identity-related terms (gender, black) or general legal jargon. 
+The 30 most important words are either names, identity-related terms (gender, black) or general legal jargon. A few interesting insights have been listed here:
+\begin{itemize}
+    \item Topic 12 that mentions Justice Ginsburg and legislation is much more popular along female nominees given the work she has done championing women's rights 
+    and gender equality.
+    \item The use of words such as `business' and `agency' are significantly more popular with male nominees showing the focus on the nominee's competencies and
+    judicial philosophies. This also includes top 15 where talks of legal jurisdictions with words such as `privacy', `clause' and `national' are way more popular 
+    with male nominees. This is supported by the arrangement of the thematic clusters for topics 5, 15, 8 and 11.
+    \item The thematic clusters show topics 3, 12, 2 and 13 that focus on Justice Ginsburg, Justice O'Connor,gender and voting legislation are more heavily focused on 
+    privacy and reproductive rights, often regarded as `women`'s issues`.
+\end{itemize}
 
 \subsection{Experimentation}
-\begin{figure}[H]\label{fig:stemming}
+\begin{figure}[H] \label{fig:stemming}
     \centering
     \includegraphics[scale=0.35]{/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/visualizations/stemming_LDA.png}
     \caption{Results from LDA Topic Modelling Post-Stemming and with TF-DIF}
 \end{figure}
 
-As shown in figure \ref{fig:stemming}, the intertopic distance map visualizes the relationship between the different topics where each bubble represents 
-a topic with the bubble's size indicating the topic's overall prevalence in the dataset. Topics 5, 6, 10, 9, 3, 4, 2, 1 and more are overlapping and 
-clustered together suggesting similarity. \\
-
-The list of the 30 most popular words seems to have a lot of incomplete words suggesting improper text preprocessing and analysis.
+As shown in figure \ref{fig:stemming}, it is obvious that stemming has been used as terms like `privacy' have been incorrectly spelt as `privaci'.
+The analysis result is pretty similar to the previous section's result excluding the misspelt words.
 
 \section{Discussion}
+
+This section outlines common findings and insights dervided from the program.
 
 \subsection{Findings}
 % Include two subsections in the discussion. The first should talk about what
 % you learned about your dataset. Imagine that you are describing what your results showed,
 % at a high level, to a friend who does not have any NLP experience but is interested in the
 % corpus that you chose.
+As outlined in the description of the dataset, the hypothesis remains proven true. The Naive-Bayes analysis and the LDA analysis support the theory 
+that when interviewing women nominees, more focus is placed on their personal characteristics and questioning their qualifications as opposed to the male 
+nominees who are questioned over their judicial philosophy and appreciated for their competency and qualifications.  For instance, topics involving privacy 
+rights, gender, and specific legal clauses appeared more frequently in female discourse, while topics involving procedural aspects or judiciary figures had 
+a higher presence in male discourse. However, this raised an important methodological question: to what extent do these differences reflect genuine discourse 
+variation versus biases in data representation?
 
 \subsection{Reflection}
 % The second subsection should cover what lessons you personally
 % learned during the completion of the assignment. You might write about how you found and
 % processed the data, preprocessing effects on downstream analysis, topic modeling results,
 % limitations of your approaches, or other interesting aspects that were new to you.
+Although I was aware of the importance of text normalization and preprocessing, their importance became a lot more evident during this process. Stopword removal, 
+stemming and lemmatization have a significant impact on the coherence of topics. Even small changes in preprocessing steps altered the topic distributions, 
+which highlighted the sensitivity of topic modeling to text cleaning procedure. It was also surprising (although should have been expected) that the transcripts are 
+dominated by names and judicial jargon. \\
 
-\section{Appendix}
+It has also become clear to me that topic modelling has limitations such as the fact that it provides a useful high-levl overview of themes, it lacks the ability to 
+capture nuanced contextual meanings. Some topics were too broad or contained words that seemed unrelated at first glance. Overall, this assignment deepened my understanding 
+of text analysis and the complexities involved in extracting meaningful insights from unstructured textual data. It also reinforced the importance of critical interpretation 
+when working with computational models - numbers alone do not tell the full story and human judgment is essential in deriving meaningful conclusions.
 
 \end{document}
