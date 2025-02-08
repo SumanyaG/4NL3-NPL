@@ -3,7 +3,6 @@ import re
 import numpy as np
 import pandas as pd
 import nltk
-from scipy.sparse import save_npz, load_npz
 from sklearn.feature_extraction.text import CountVectorizer
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
@@ -130,8 +129,8 @@ def calculate_word_probabilities(bow_matrix, labels, vocab_size, alpha=1.0):
 def calculate_log_likelihood_ratio(p_w_c, p_w_other):
     return np.log(p_w_c) - np.log(p_w_other)
 
-def categorize_words(llr_scores, feature_names, threshold=1.0):
-    categories = {
+def classify_words(llr_scores, feature_names, threshold=1.0):
+    classification = {
         'legal_interpretation': {
             'constitution', 'precedent', 'interpretation', 'amendment', 'rights',
             'principle', 'doctrine', 'judicial', 'ruling', 'decision'
@@ -151,12 +150,12 @@ def categorize_words(llr_scores, feature_names, threshold=1.0):
     }
     
     results = {
-        'female': {cat: [] for cat in categories.keys()},
-        'male': {cat: [] for cat in categories.keys()}
+        'female': {cat: [] for cat in classification.keys()},
+        'male': {cat: [] for cat in classification.keys()}
     }
     
     for idx, (word, score) in enumerate(zip(feature_names, llr_scores)):
-        for category, category_words in categories.items():
+        for category, category_words in classification.items():
             if any(cat_word in word for cat_word in category_words):
                 if score > threshold:
                     results['female'][category].append((word, score))
@@ -240,7 +239,7 @@ def main():
     
     llr_scores = calculate_log_likelihood_ratio(p_w_female, p_w_male)
     
-    categorized_results = categorize_words(llr_scores, feature_names)
+    categorized_results = classify_words(llr_scores, feature_names)
     
     results_list = []
     for gender in ['female', 'male']:

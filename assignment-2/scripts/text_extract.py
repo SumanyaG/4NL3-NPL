@@ -1,5 +1,4 @@
-import fitz 
-import os
+import fitz
 from pathlib import Path
 
 def clean_text(text):
@@ -51,13 +50,12 @@ def batch_process_pdfs(input_dir, output_dir):
         print(f"Processing {i}/{total_files}: {pdf_file.name}")
         if process_pdf(pdf_file, output_path):
             successful += 1
-    
-    print(f"\nProcessing complete!")
+
     print(f"Successfully processed: {successful}/{total_files} files")
     print(f"Text files saved to: {output_path}")
 
 if __name__ == "__main__":
     input_directory = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/male-nominees"
     output_directory = "/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/male-nominees-processed"
-    
+        
     batch_process_pdfs(input_directory, output_directory)
