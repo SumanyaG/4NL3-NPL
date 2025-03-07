@@ -39,14 +39,40 @@ between them.
 % What did you learn about the task from doing the annotation? What challenges do you
 % expect models to face? What surprising things did you observe in the data? Which features
 % do you expect to be useful?
+I am unsure about what the other datasets look like but if they are similar to Part 4, I believe the model 
+might not be trained over diversified content. This is mostly because out of all the messages I annotated, a 
+majority belonged to this set of words - `ez', `gg', `hahaha', `lol' or their variations. For the model to 
+generate actual, meaningful results, it must be trained on more expressive test messages that are representative 
+of all the 7 labels.\\
+\newline
+Additionally, I think the preprocessing of the data will require a lot more nuance because a majority of the 
+text messages had typos in them. This presents two options - either disregard any message with a typo in it which 
+would reduce the dataset by a considerable amount or, label them based on their inferred context but have a 
+robust preprocessing system set up. Even if the team chooses the latter option, I am not sure if a sufficiently 
+broad enough system can be developed to accurately identify the typos and correct them unless done manually.
 
 
 \section{Mental Model}
 % Did you come up with your own mental model of how to do the task and can you (at a high
 % level) describe that?
+Very quickly into the task, I came to the realization that most messages were either `ez', `gg' or some variation 
+of that which would be labelled as \emph{positive}. I also put anything with a curse word directly into the \emph{verbal abuse}
+category which further simplified the task. I had chosen to label test-based emojis as \emph{non-English} and all 
+variations of `lol', `lmao', `haha' as \emph{miscellaneous}. Since about three-quarters of the messages fell neatly 
+into one of these categories, it was pretty easy to annotate them and I made my way through the dataset in half the allocated time.
 
 \section{Ambiguity in Instructions}
 % Was there anything unclear about the instructions? How would you recommend modifying
 % them in the future to make them more helpful?
+The instructions did not specify the order of priority for messages that could be labelled as two or more of the given 
+categories. For example, if an otherwise positive message also contains the word `haha' or some other random sequence of 
+characters, should it be labelled as \emph{positive} or \emph{non-English}? Leaving the order of precedence up to the annotators
+might cause discrepancy in the annotator agreement ratios.\\
+\newline
+Furthermore, for a lot of the messages, longer sentences were broken down across multiple messages, it would have been helpful to 
+have clear instructions about whether these should be labelled based on the messages that follow and provide additional context or 
+without taking those into consideration. For example, in one of the games the sequence of messages was as follows - `apparently' which 
+could either be \emph{casual} or \emph{cooperative} based on what the following messages are, and then a message describing the game 
+strategy. 
 
 \end{document}
