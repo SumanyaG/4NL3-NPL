@@ -21,23 +21,50 @@
 
 \section{Description of Task}
 % A brief description of the task, as you understand it.
-The task consisted of labelling the  messages sent by users before or while playing
-the DOTA game. 
+The task consisted of going through emails and categorizing them as potential phishing emails 
+or genuine emails. 
 
 \section{Interesting Aspects}
 % What was most interesting to you about the task and the data?
+As someone who grew up in the age of technology, I have always believed that I am tech-savvy 
+enough to not fall for phishing scams but for a lot of the advertising or marketing emails, it 
+took me a bit to be sure about my answer. For a bunch of them, I could not be 100\% certain 
+about whether it was a genuine marketing campaign or a phishing scam.
 
 \section{Insights and Challenges}
 % What did you learn about the task from doing the annotation? What challenges do you
 % expect models to face? What surprising things did you observe in the data? Which features
 % do you expect to be useful?
+Based on the annotation guidelines, for a lot of the emails that had gibberish in them and seemed 
+incomprehensible to me, I had to classify them as \emph{not a phishing scam} solely because they 
+did not contain a URL.\\
+\newline
+As for the model, I believe that there might be discrepancies in the annotator agreement ratio 
+pertaining to the classification of marketing emails, order and shipping confirmation emails and such. 
+Based on how elaborately the model is trained and how robust the classification criteria is for such emails, 
+the model might struggle to accurately label these emails.
 
 \section{Mental Model}
 % Did you come up with your own mental model of how to do the task and can you (at a high
 % level) describe that?
+For every email that either started with a `Dear <name>' or ended with a `Thanks <name>', I could 
+automatically classify them as \emph{not phishing} saving me from having to read the entire email. 
+Based on the guidelines, for emails that were too long (and there was a substantial number of them), I 
+skimmed across the content and looked for any URLs. If it did not have a URL, I spared myself the effort 
+of having to read all those sentences and labelled it as \emph{not phishing}. I followed the same 
+principle for emails that were either forwarded or started with `re' because it was evident that those 
+ones were written by a colleague.\\
+\newline
+As for the marketing campaigns and order/shipping confirmation emails, if an email had wonky punctuation 
+or just seemed sketchy, I classified it as a \emph{phishing scam}. Also, as outlined in the guidelines, 
+whenever in doubt, I labelled the email as a \emph{phishing scam}.
 
 \section{Ambiguity in Instructions}
 % Was there anything unclear about the instructions? How would you recommend modifying
 % them in the future to make them more helpful?
-
+The instructions were pretty clear and the guideline to classify any emails that could be determined with a 
+100\% certainity as a \emph{phishing email} simplified matters a lot because I ran into this dilemma very often.
+The only suggestion I have is to perhaps include information about system generated emails such as the ones about 
+`could not deliver email because the address is invalid' or `no variance detected' and more. These emails did not 
+seem suspicious enough to be phishing emails and were probably system generated emails with company-relevant information.
 \end{document}
