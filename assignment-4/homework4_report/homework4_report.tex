@@ -144,212 +144,90 @@ Although the comments vary in length, the maximum sequence length has been cappe
 to ensure concise and focused emotional expressions. Furthermore, linguistic context consistency has been ensured by only choosing comments 
 that are in English.
  
+\section{Fine-tuned Models}
+For this task, the \href{https://huggingface.co/FacebookAI/roberta-base}{RoBERTa-base} model and the \href{https://huggingface.co/distilbert/distilbert-base-uncased}
+{DistilBERT-base-uncased} model have been used. 
 
+\subsection{Model 1: RoBERTa-base}
+RoBERTa or "A Robustly Optimized BERT Pretraining Approach" is a transformer-based model that builds on the BERT architecture. It improves upon 
+BERT's pretraining methodology by training longer with larger batches over more data, removing the next sentence prediction objective, and dynamically 
+changing the masking pattern applied to the training data. The model has approximately 125 million total parameters. 
 
-
-
-
-
-
-
-\section{Methodology}
-% Describe the steps that you performed and what informed your decisions.
-% For example, if you decided not to lowercase the text because it gave better results at a later
-% stage, include that decision and your reasoning for doing that. This should include details
-% of your preprocessing steps, e.g. lowercasing, stemming, not just saying “each document was
-% preprocessed”. Describe the kind of analysis you performed. For any steps that you did not
-% implement yourself (e.g. topic modeling), you should mention which package/library was
-% used.
-
-\subsection{Preprocessing}
-Since the \texttt{data\_extract.py} file only extracts the data from the PDF and store it in a text file, 
-the first step in preprocessing the dataset was to clean the text. This was accomplished using the following 
-methods through iterative testing:
+\subsubsection{Pretraining Dataset}
+RoBERTa was pretrained on a diverse and extensive corpus totalling around 160GB of text, including:
 \begin{itemize}
-    \item Replacing all new lines with a blank space.
-    \item Removing all words that have a hyphen followed by a blank space. For example, long- term to longterm.
-    \item Removing all leading and trailing spaces along with the replacement of multiple blank spaces with a single space.
-    \item Removing all digits to streamline the frequency count and ranking of alphabetic tokens. This was implemented 
-    because with the digits in the corpus, the years and other random numbers referencing legal cases and such populated the 
-    top 10/top 25 counts corrupting the data analysis.
-    \item Removing all punctuation for more accurate tokenization.
+    \item BookCorpus which is a dataset of 11,038 unpublished books 
+    \item English Wikipedia excluding lists, tables and headers 
+    \item CommonCrawl News with over 63 million English news articles from 2016-2019 
+    \item OpenWebText which is an open source recreation the WebText dataset used to train GPT-2 
+    \item Stories which is a dataset containing a subset of CommonCrawl data filtered to match story-like style of Winograd schemas
 \end{itemize}
 
-\subsubsection{Naive-Bayes}
-Further preprocessing for Naive-Bayes included the following steps:
+\subsubsection{Compute Requirements for Pretraining}
+The pretraining of RoBERTa-base involved substantial computational resources, including:
 \begin{itemize}
-    \item Using the list of common stopwords from the \textsl{nltk} library to remove words that do not reflect the 
-    actual content.
-    \item The list of stopwords was expanded to account for commonly found words in the dataset that did not convey the 
-    sentiment or the content of the sentence. This includes words such as \texttt{said, would, one, jan, feb}.
-    \item To further refine our results, commonly used legal jargon was also added to the list of stopwords. This includes
-    words such as \texttt{hearings, committee, senator, judge, case}.
+    \item \textbf{Hardware}: 1,024 V100 GPUs
+    \item \textbf{Training Duration}: 500,000 steps 
+    \item \textbf{Batch Size}: 8,000
+    \item \textbf{Sequence Length}: 512 tokens
+    \item \textbf{Optimizer}: Adam with a learning rate of 6e-4 
 \end{itemize}
 
-\subsubsection{Latent Dirichlet Allocation (LDA) Preprocessing}
-Further preprocessing for LDA included the following steps:
+\subsection{Model 2: DistilBERT-base-uncased}
+DistilBERT is a distilled version of BERT, designed to be smaller, faster, and more efficient while retaining 97\% of BERT's language 
+understanding capabilities. It achieves this through knowledge distillation during the pretraining phase, effectively reducing the model 
+size by 40\%. The model has approximately 66 million total parameters.
+
+\subsubsection{Pretraining Dataset}
+DistilBERT was pretrained on the same corpus as BERT, which includes:
 \begin{itemize}
-    \item Adding additional stop words including `sgpohearings' and `sgpohearingstxt' that are not actual words with defined meanings.
-    \item Using NLTK's lemmatizer removing any tokens starting with `sgpo'.
+    \item BookCorpus which is a dataset of 11,038 unpublished books
+    \item English Wikipedia excluding lists, tables and headers
 \end{itemize}
 
-\subsection{Bag-of-Words Representation}
-As shown in tutorials, the \texttt{CountVectorizer()} function was used to implement Bag-of-Words on the dataset.
-Probability calculations given in the instructions PDF for this assignment were then used to implement the 
-\texttt{calculate\_word\_probabilities()} function. The output from this function was then to calculate the 
-Log Likelihood Ratio. 
-
-\subsection{Naive-Bayes Model}
-
-Given the fact that the dataset is made up of real transcripts of legal hearings, the used of names of the judges and/or
-the senators interviewing them are over-represented in the dataset. This skews the results of analyses performed 
-on the processed dataset. \\
-
-To combat this issue and to maintain the focus on the goal of this assignment, classifications were establish so the focus of 
-the analyses would remain on words that align with the characteristics of the nominee. 4 different classifications - 
-Legal Interpretation, Background Experience, Personal Characteristics and Competency Qualification were created. \\
-
-Each of these classifications was populated with a list of related words that speak to that particular classification, such as - 
-words like `ruling', `precedent', `principle', `rights' and more were added to the Legal Interpretation classification. By analyzing the 
-frequency of these words in the vocabulary for the female and male nominees, any potential bias towards a nominee can be spotted. If 
-the focus of the hearing is on 1-2 classifications as opposed to a general overview of all of them, this would highlight implicit bias.
-
-\subsection{Topic Modelling}
-The \texttt{gensim} and \texttt{pyLDSvis} libraries were used to implement LDA topic modelling as shown in the tutorial. 
-The \texttt{get\_topic\_words()} and \texttt{get\_document\_topic()} functions were then used to get information on the topics and 
-documents.  
-
-\subsection{Experimentation}
-In addition to importing all the functions from the \texttt{processing.py} file, two new functions were added to implement text normalization 
-variation and LDA variation. \texttt{PorterStemmer()} was used to implement stemming as a part of the preprocessing of the data. Another function 
-was then implemented to create a TF-IDF matrix using the \texttt{TfidfVectorizer()} function. The code for this was based on the tutorials.
-
-\section{Results and Analysis}
-% Present your results as formatted tables and figures. You should
-% have at least one table or figure for each of 2.3, 2.4, and 2.5. This must include at least the
-% results of the required steps, but may also include any interesting findings you came across
-% (e.g. results of topic modeling with and without a given preprocessing step that made a
-% difference in the quality of the results). For each table and figure, include a description of
-% your main takeaways.
-The results and insights gather from the analyses has been summarized in the following subsections.
-
-\subsection{Naive-Bayes}
-
-\begin{table}[H] \label{tab:naive-bayes}
-    \centering
-    \begin{tabular}{llll}
-    \toprule
-    \textbf{Gender} & \textbf{Category} & \textbf{Word} & \textbf{LLR Score} \\
-    \midrule
-    female & background experience & backgrounds & 1.931906639972084 \\
-    female & background experience & experienced & 1.0156159080979297 \\
-    female & background experience & experiences & 1.9682742841429581 \\
-    female & background experience & framework & 2.52789007207838 \\
-    female & background experience & services & 1.4982706548972224 \\
-    \midrule
-    female & personal characteristics & biases & 1.6645918703447364 \\
-    female & personal characteristics & ethnicity & 2.6250538205320293 \\
-    female & personal characteristics & gender & 1.0750667224516768 \\
-    female & personal characteristics & genderbased & 2.10180567676748 \\
-    female & personal characteristics & grace & 1.2751271035830118 \\
-    female & personal characteristics & identity & 1.1209764237557547 \\
-    \midrule
-    female & competency qualification & applicability & 1.8941663119892365 \\
-    female & competency qualification & availability & 1.46928311802397 \\
-    \midrule
-    male & legal interpretation & judicially & 1.1407866747180364 \\
-    male & legal interpretation & overruling & 1.2014112965344719 \\
-    \midrule
-    male & background experience & practiced & 1.4245548478486825 \\
-    male & background experience & worker & 1.0762481535804653 \\
-    male & background experience & workload & 1.4817132616886308 \\
-    \midrule
-    male & personal characteristics & beliefs & 1.3067718121922978 \\
-    male & personal characteristics & embraced & 1.7693953341404107 \\
-    male & personal characteristics & unbiased & 2.0570774065921924 \\
-    \midrule
-    male & competency qualification & disability & 1.209779546204988 \\
-    male & competency qualification & wellqualified & 2.0570774065921924 \\
-    \bottomrule
-    \end{tabular}
-    \caption{Results from the Naive-Bayes Analysis}
-\end{table}
-
-As shown in table \ref{tab:naive-bayes}, the analysis shows that when interviewing female nominees are interviewed, greater focus 
-is put on their personal characteristics with conversations about biases, gender, grace and identity taking up a significant amount 
-of attention. In terms of their background experiences and competency qualifictaions, the focus is put on their availability and 
-the top words from the category across documents are neutral in tone. None of the words added to the legal interpretation category 
-were found in a significant frequency for the female nominees. \\
-
-As for the male nominees, however, words like `judicially' and `overruling' are highlighted showing the focus on the conversation around 
-the nominee's career in law and their judgments. The conversations around personal characteristics seem to be more focused on the 
-individual as opposed to their gender or other aspects of their identity. The most starking difference can be seen in the tone of 
-the competency qualifications since the word `wellqualified' seems to have a very high probability showing the appreciative tone 
-of the hearings.
-
-\subsection{Topic Modelling}
-
-The complete list of topic words along with their labels can be found in the \texttt{topic\_words.csv} file. The averages for the top 
-20 of these topics split by the gender can also be found in the \texttt{category\_topics.csv} file. 
-
-\begin{figure}[H]\label{fig:LDA}
-    \centering
-    \includegraphics[scale=0.35]{/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/visualizations/LDA.png}
-    \caption{Results from LDA Topic Modelling}
-\end{figure}
-
-As shown in figure \ref{fig:LDA}, the intertopic distance map visualizes the relationship between the different topics where each bubble represents 
-a topic with the bubble's size indicating the topic's overall prevalence in the dataset. Topics 12, 8, 4, 1, 6, 9, 5, 3 and more are overlapping and 
-clustered together suggesting similarity. \\
-
-The 30 most important words are either names, identity-related terms (gender, black) or general legal jargon. A few interesting insights have been listed here:
+\subsubsection{Compute Requirements for Pretraining}
+The pretraining of DistilBERT-base-uncased utilized:
 \begin{itemize}
-    \item Topic 12 that mentions Justice Ginsburg and legislation is much more popular along female nominees given the work she has done championing women's rights 
-    and gender equality.
-    \item The use of words such as `business' and `agency' are significantly more popular with male nominees showing the focus on the nominee's competencies and
-    judicial philosophies. This also includes top 15 where talks of legal jurisdictions with words such as `privacy', `clause' and `national' are way more popular 
-    with male nominees. This is supported by the arrangement of the thematic clusters for topics 5, 15, 8 and 11.
-    \item The thematic clusters show topics 3, 12, 2 and 13 that focus on Justice Ginsburg, Justice O'Connor,gender and voting legislation are more heavily focused on 
-    privacy and reproductive rights, often regarded as `women`'s issues`.
+    \item \textbf{Hardware}: 8 16GB V100 GPUs
+    \item \textbf{Training Duration}: 90 hours
 \end{itemize}
 
-\subsection{Experimentation}
-\begin{figure}[H] \label{fig:stemming}
-    \centering
-    \includegraphics[scale=0.35]{/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-2/dataset/visualizations/stemming_LDA.png}
-    \caption{Results from LDA Topic Modelling Post-Stemming and with TF-DIF}
-\end{figure}
-
-As shown in figure \ref{fig:stemming}, it is obvious that stemming has been used as terms like `privacy' have been incorrectly spelt as `privaci'.
-The analysis result is pretty similar to the previous section's result excluding the misspelt words.
-
-\section{Discussion}
-
-This section outlines common findings and insights dervided from the program.
-
-\subsection{Findings}
-% Include two subsections in the discussion. The first should talk about what
-% you learned about your dataset. Imagine that you are describing what your results showed,
-% at a high level, to a friend who does not have any NLP experience but is interested in the
-% corpus that you chose.
-As outlined in the description of the dataset, the hypothesis remains proven true. The Naive-Bayes analysis and the LDA analysis support the theory 
-that when interviewing women nominees, more focus is placed on their personal characteristics and questioning their qualifications as opposed to the male 
-nominees who are questioned over their judicial philosophy and appreciated for their competency and qualifications.  For instance, topics involving privacy 
-rights, gender, and specific legal clauses appeared more frequently in female discourse, while topics involving procedural aspects or judiciary figures had 
-a higher presence in male discourse.
-
-\subsection{Reflection}
-% The second subsection should cover what lessons you personally
-% learned during the completion of the assignment. You might write about how you found and
-% processed the data, preprocessing effects on downstream analysis, topic modeling results,
-% limitations of your approaches, or other interesting aspects that were new to you.
-Although I was aware of the importance of text normalization and preprocessing, their importance became a lot more evident during the course of this assignment. Even small 
-changes in preprocessing steps altered the topic distributions, which highlighted the sensitivity of topic modeling to text cleaning procedure. It was also surprising 
-(although should have been expected) that the transcripts are dominated by names and judicial jargon. \\
-
-It has also become clear to me that topic modelling has limitations such as the fact that it provides a useful high-level overview of themes, it lacks the ability to 
-capture nuanced contextual meanings. Some topics were too broad or contained words that seemed unrelated at first glance. Overall, this assignment deepened my understanding 
-of text analysis and the complexities involved in extracting meaningful insights from unstructured textual data. It also reinforced the importance of critical interpretation 
-when working with computational models - numbers alone do not tell the full story and human judgment is essential in deriving meaningful conclusions.
+\subsection{Fine-Tuning Steps}
+The RoBERT-a and DistilBERT-base-uncased models were fine-tuned on the GoEmotions dataset using the following process:
+\begin{enumerate}
+    \item Dataset Preparation
+        \begin{itemize}
+            \item Loaded the GoEmotions dataset with simplified labels (27 categories in total).
+            \item Verified the dataset structure and label distribution.
+            \item Used the predefined train, validation and test splits.
+        \end{itemize}
+    \item Preprocessing 
+        \begin{itemize}
+            \item Tokenize the data using RoBERTa's byte-level Byte-Pair Encoding (BPE) tokenizer and DistilBERT's WordPiece tokenizer.
+            \item Applied truncation and padding to a maximum sequence length of 128 tokens.
+            \item Converted datasets to PyTorch format.
+        \end{itemize}
+    \item Hyperparameter Optimization
+        \begin{itemize}
+            \item Optimized for weighted F1 score on the validation set.
+            \item Tuned parameters such as learning rate, weight decay and batch size.
+            \item Performed 5 trials per model to balance optimization quality with computational time.
+        \end{itemize}
+    \item Model Configuration 
+        \begin{itemize}
+            \item Configured both models with a classification head for 27 labels.
+            \item Implemented early stopping with a patience of 3 epochs.
+            \item Used mixed precision training for memory efficiency.
+            \item Applied gradient accumulation (steps=2) to stimulate larger batch sizes.
+        \end{itemize}
+    \item Fine-tuning Process 
+        \begin{itemize}
+            \item Trained both models using the Trainer API from HuggingFace Transformers.
+            \item Applied the best hyperparameters found during optimization.
+            \item Trained for up to 5 epochs with early stopping.
+            \item Envaluated performance after each epoch on the validation set.
+            \item Saved the best checkpoint based on validation performance.
+        \end{itemize}
+\end{enumerate}
 
 \end{document}
