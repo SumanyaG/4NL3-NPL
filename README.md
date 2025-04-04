@@ -1,3 +1,2 @@
 <h1> 4NL3 - Natural Language Processing </h1>
-This repository contains all relevant code, documents, resources and deliverables for the individual course assignments.
-Taught in Winter 2025 by Dr. Charles Welch at McMaster University.
+This repository contains all relevant code, documents, resources and deliverables for the individual course assignments. Taught in Winter 2025 by Dr. Charles Welch at McMaster University.

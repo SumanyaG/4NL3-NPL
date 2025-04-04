@@ -150,6 +150,12 @@ Class distributions for the training and test splits are shown in the figure \re
     \caption{Class Distribution in Training and Test Splits}
 \end{figure}
 
+\begin{figure}[H] \label{fig:class_dist_graph}
+    \centering
+    \includegraphics[scale=0.6]{/Users/sg/Desktop/courses/winter-2025/4nl3/assignments/assignment-4/homework4_report/figures/class_dist_graph.png}
+    \caption{Class Distribution in Training and Test Splits}
+\end{figure}
+
 \subsection{Additional Features}
 Although the comments vary in length, the maximum sequence length has been capped at 30 tokens in the training and evaludation datasets 
 to ensure concise and focused emotional expressions. Furthermore, linguistic context consistency has been ensured by only choosing comments 
@@ -294,22 +300,142 @@ poor performance and is barely predicting any correct answers. A low epoch score
 was done when about 29\% of the first epoch was complete.
 
 \section{Zero-shot Classification}
+Models from \href{https://github.com/ggml-org/llama.cpp}{Llama.cpp} were used for this portion of the assignment.
 
 \subsection{Models Description}
+Detailed descriptions of each model can be found below.
+
+\subsubsection{AquilaChat2 34B - GGUF}
+Originally developed by the Beijing Academy og Artificial Intelligence, the Q4\_K\_M quant method of the model, has a
+size of approximately 20.33 GB. The model is medium-sized and of balanced quantity. While exact data about its pretraining 
+is not publicly available, it is known that this model was built upon an earlier model and fine-tuned on a dataset comprising 
+of roughly 200,000 high-quality, long-text conversations. For comparison, pretraining a 34B parameter model can involve 
+anywhere from tens of thousands to over a hundred thousand GPU hours. 
+
+\subsubsection{Deepseek LLM 7B Chat - GGUF}
+Originally developed by DeepSeek, this model, specifically the Q4\_K\_M quantization, is of size 4.22 GB.
+This version is the 7 billion parameter variant and is specifically fine-tuned for conversational tasks. 
+Exact information about its pretraining data or computer required for pretraining has not been publicly 
+disclosed but it is known that the model is built upon the Llama architecture and is designed to handle both English 
+and Chinese languages. For comparison, training a 7B parameter model such as the Llama 2 reportedly took roughly 
+184,320 GPU hours.
 
 \subsection{Model Prompting}
+Each model was prompted with with 5 distinct templates designed to guide it into classifying emotions in the input 
+text based on predefined emotion indices, similar to the GoEmotions dataset. Each template had a different style:
+\begin{itemize}
+    \item \textbf{Prompt 1}: Simply asks the model to classify the text by emotion indices, listing the indices and their
+    corresponding labels.
+    \item \textbf{Prompt 2}: Provides example texts and asks the model to classify a new text based on the same emotion indices.
+    \item \textbf{Prompt 3}: Directly asks model to select all applicable emotion indices for the given text, again providing 
+    the emotional index mapping.
+    \item \textbf{Prompt 4}: Frames the task as a content moderation task where the model is asked to tag emotions from the text.
+    \item \textbf{Prompt 5}: Instructs the model to analyze the emotional tone of the text step-by-step and return the emotion indices.
+\end{itemize}
 
-\section{Baselines}
+The exact text used for each prompt is as follows:
+\subsubsection{Prompt 1}
+\begin{quote}
+    You are an emotion classifier. Analyze the text and respond ONLY with the corresponding emotion numbers (0-27) between square brackets.
+    
+    Available emotions:
+    0=admiration 1=amusement 2=anger 3=annoyance 4=approval
+    5=caring 6=confusion 7=curiosity 8=desire 9=disappointment
+    10=disapproval 11=disgust 12=embarrassment 13=excitement
+    14=fear 15=gratitude 16=grief 17=joy 18=love
+    19=nervousness 20=optimism 21=pride 22=realization
+    23=relief 24=remorse 25=sadness 26=surprise 27=neutral
 
-\subsection{Setup}
+    Text: "{text}"
+\end{quote}
 
-\section{Results}
+\subsubsection{Prompt 2}
+\begin{quote}
+    Examples:
+        1. "I love you" → [18]
+        2. "This is terrible" → [2, 10]
+        Now classify:
+    Text: "{text}". Analyze the text and respond ONLY with the corresponding emotion numbers (0-27) between square brackets.
+    Available emotions:
+    0=admiration 1=amusement 2=anger 3=annoyance 4=approval 5=caring 6=confusion 7=curiosity 8=desire 9=disappointment 10=disapproval 
+    11=disgust 12=embarrassment 13=excitement 14=fear 15=gratitude 16=grief 17=joy 18=love 19=nervousness 20=optimism 21=pride 
+    22=realization 23=relief 24=remorse 25=sadness 26=surprise 27=neutral.
+\end{quote}
 
-\subsection{Summary of Results}
+\subsubsection{Prompt 3}
+\begin{quote}
+    Select all applicable emotion numbers (0-27) for this text and respond ONLY with the corresponding emotion numbers (0-27) between 
+    square brackets. Text: "{text}". 
 
-\subsection{Observations and Analysis}
+    Available emotions:
+    0=admiration 1=amusement 2=anger 3=annoyance 4=approval 5=caring 6=confusion 7=curiosity 8=desire 9=disappointment 
+    10=disapproval 11=disgust 12=embarrassment 13=excitement 14=fear 15=gratitude 16=grief 17=joy 18=love 
+    19=nervousness 20=optimism 21=pride 22=realization 23=relief 24=remorse 25=sadness 26=surprise 27=neutral.
+\end{quote}
+
+\subsubsection{Prompt 4}
+\begin{quote}
+    As a content moderator, Analyze the text and respond ONLY with the corresponding emotion numbers (0-27) between square 
+    brackets by tagging emotions (0-27) where 0=admiration 1=amusement 2=anger 
+    3=annoyance 4=approval 5=caring 6=confusion 7=curiosity 8=desire 9=disappointment 10=disapproval 11=disgust 
+    12=embarrassment 13=excitement 14=fear 15=gratitude 16=grief 17=joy 18=love 19=nervousness 20=optimism 21=pride 
+    22=realization 23=relief 24=remorse 25=sadness 26=surprise 27=neutral.
+    Text: "{text}". 
+\end{quote}
+
+\subsubsection{Prompt 5}
+\begin{quote}
+    Analyze this text's emotional tone step-by-step.
+    Text: "{text}" Then provide emotion indices (0-27 ONLY) ONLY with the corresponding emotion numbers (0-27) between square 
+    brackets.
+    Available emotions:
+    0=admiration 1=amusement 2=anger 3=annoyance 4=approval 
+    5=caring 6=confusion 7=curiosity 8=desire 9=disappointment 10=disapproval 11=disgust 12=embarrassment 13=excitement 
+    14=fear 15=gratitude 16=grief 17=joy 18=love 19=nervousness 20=optimism 21=pride 22=realization 
+    23=relief 24=remorse 25=sadness 26=surprise 27=neutral.
+\end{quote}
+
+\subsection{Results}
+For each model, all prompts were tested on 5 trial examples. For each trial example, a \emph{best prompt} was chosen and out of 
+the final 5 \emph{best prompts}, the one with the highest occurrence was selected as the overall best prompt to be used for running 
+zero-shot classification on the entire test dataset. The results of each model are as follows:
+\begin{table}[H] \label{tab:zero_shot_results}
+    \centering
+    \begin{tabular}{lll}
+    \toprule
+    \textbf{Model} & \textbf{Best Prompt} & \textbf{Best Prompt Occurrences} \\
+    \midrule
+    AquilaChat2 34B - GGUF & None &  \\
+    Deepseek LLM 7B - GGUF & Prompt 4 & 2 \\
+    \bottomrule
+    \end{tabular}
+    \caption{Zero-shot Classification Results}
+\end{table}
+
+For the AquilaChat2 34B model, none of the prompts were able to classify any of the trial examples correctly. Thus, prompt 1 was chosen 
+as the default prompt for this model. Apart from this, a few interesting observations for both models are:
+\begin{itemize}
+    \item The AquilaChat2 34B model incorrectly labelled 'neutral' as 'amusement' for all prompts.
+    \item The Deepseek LLM 7B model incorrectly labelled 'annoyance' as 'anger' for 3 out of 5 prompts.
+    \item The Deepseek LLM 7B model was able to correctly classify 'anger' for almost all prompts.
+\end{itemize}
 
 \section{Reflection}
+During the completion of this assignment, I learned just how much impact a seemingly trivial parameter can have on the time it takes to 
+train a model when fine-tuning it. I also learned how to use the Optuna framework to optimize hyperparameters and how hyperparameters can drastically 
+change the performance of a model. I also learned just how useful MPS actually is when compared to a CPU. The most unexpected and possibly 
+frustrating part of this assignment was how it took 10 hours to train the RoBERTa model with my unoptimized script the first time I ran it. Building on to 
+this, I also realized how despite training the odel for 5 whole epochs, the accuracy rate still remained around 55\% which was disappointing.\\
+\newline
+I also spent a considerable amount of time trying to figure out why my fine-tuned models, especially the DistilBERT model had such extremely poor performance. 
+I have narrowed it down to the following possible reasons:
+\begin{itemize}
+    \item \textbf{Early Stopping Issue}: The DistilBERT model only completed 0.29 epochs before stopping which likely happened because the F1 score likely did 
+    not improve for 2 consecutive evaluations (where \texttt{eval\_steps=100} and \texttt{early\_stopping\_patience=2}) triggering early stopping.
+    \item \textbf{Multi-Label Classification}: The \texttt{compute\_metrics} function is using a threshold of 0.5 for all labels which is not optimal as it does 
+    not account for imbalanced classes. This can lead to poor performance because some emotions in the dataset are pretty rare in terms of occurrence.
+    \item \textbf{Loss Function}: The use of the \texttt{BCEWithLogitsLoss} without class weights did not account for an imbalanced dataset. 
+\end{itemize}
 
 \section{Use of Generative AI}
 The use of Generative AI for this assignment has been detailed below in accordance with the course policy.
@@ -353,7 +479,5 @@ To use the \href{https://mlco2.github.io/impact/?#compute}{Machine Learning Emis
     \item \textbf{How the Values were Determined}: Since the website does not provide any options that durectly match Apple's GPU, T4 was selected 
     as the best match since it is a lower-power GPU that is somewhat closer to the M2 GPU in terms of power efficiency.
 \end{itemize}
-
-
 
 \end{document}
